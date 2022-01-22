@@ -21,6 +21,7 @@ const MOD_PAGE_URL = 'https://steamcommunity.com/sharedfiles/filedetails';
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 mins
 
 const STANDARD_DATE_FORMAT = 'D MMM YYYY h:mma';
+const STANDARD_DATE_FORMAT_US = 'MMM D YYYY h:mma';
 
 axios.defaults.headers.common = {
     Cookie: 'timezoneOffset=28800,0',
@@ -128,7 +129,8 @@ async function getModMetadata(modAppId) {
 
         let [dateText, timeText] = dateTimeText.split(' @ ');
 
-        if (/^\d\d? [a-zA-Z]+$/.test(dateText)) {
+        // check if year exists
+        if (!/\d\d\d\d/.test(dateText)) {
             dateText = `${dateText}, ${getCurrentYear()}`;
         }
 
@@ -137,10 +139,16 @@ async function getModMetadata(modAppId) {
 
         const title = $('.workshopItemTitle').text();
 
+        let dateFormat = STANDARD_DATE_FORMAT;
+
+        if (/^[a-zA-Z]/.test(dateText)) {
+            dateFormat = STANDARD_DATE_FORMAT_US;
+        }
+
         return {
             title,
             url: modUrl,
-            lastUpdated: dayjs(`${dateText} ${timeText}`, STANDARD_DATE_FORMAT),
+            lastUpdated: dayjs(`${dateText} ${timeText}`, dateFormat),
         };
     } catch (e) {
         throw new Error(
