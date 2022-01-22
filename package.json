@@ -1,0 +1,19 @@
+{
+  "name": "spiffo-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.25.0",
+    "cheerio": "^1.0.0-rc.10",
+    "dayjs": "^1.10.7",
+    "discord.js": "^13.6.0",
+    "lodash": "^4.17.21",
+    "promise-throttle": "^1.1.2"
+  }
+}
