@@ -96,6 +96,7 @@ async function scrapePage(pageNumber) {
         return modAppIds.map((modAppId, i) => ({
             id: modAppId,
             title: modMetadata[i].title,
+            url: modMetadata[i].url,
             lastUpdated: modMetadata[i].lastUpdated,
         }));
     } catch (e) {
