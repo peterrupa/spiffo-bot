@@ -38,29 +38,33 @@ async function main() {
     poll();
 
     async function poll() {
-        const updatedModsList = await scrapePage(1);
+        try {
+            const updatedModsList = await scrapePage(1);
 
-        const newMods = await checkForModChanges(modsList, updatedModsList);
+            const newMods = await checkForModChanges(modsList, updatedModsList);
 
-        if (newMods.length) {
-            if (modsList !== null) {
-                log('Mod changes detected.');
+            if (newMods.length) {
+                if (modsList !== null) {
+                    log('Mod changes detected.');
 
-                newMods.forEach((mod) => {
-                    log(
-                        `${mod.title} (${mod.id}) - ${dayjs(
-                            mod.lastUpdated
-                        ).format(STANDARD_DATE_FORMAT)}`
-                    );
-                });
+                    newMods.forEach((mod) => {
+                        log(
+                            `${mod.title} (${mod.id}) - ${dayjs(
+                                mod.lastUpdated
+                            ).format(STANDARD_DATE_FORMAT)}`
+                        );
+                    });
 
-                sendModUpdates(newMods);
+                    sendModUpdates(newMods);
+                }
+
+                modsList = updatedModsList;
             }
-
-            modsList = updatedModsList;
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setTimeout(poll, UPDATE_INTERVAL);
         }
-
-        setTimeout(poll, UPDATE_INTERVAL);
     }
 }
 
@@ -94,10 +98,9 @@ async function scrapePage(pageNumber) {
             lastUpdated: modMetadata[i].lastUpdated,
         }));
     } catch (e) {
-        console.error(
+        throw new Error(
             `Something wrong happened trying to scrape page ${pageNumber}.`
         );
-        console.error(e);
     }
 }
 
@@ -140,10 +143,9 @@ async function getModMetadata(modAppId) {
             lastUpdated: dayjs(`${dateText} ${timeText}`, STANDARD_DATE_FORMAT),
         };
     } catch (e) {
-        console.error(
+        throw new Error(
             `Something wrong happened trying to scrape mod ${modAppId}.`
         );
-        console.error(e);
     }
 }
 
