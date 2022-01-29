@@ -6,7 +6,7 @@ const timezone = require('dayjs/plugin/timezone');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const _ = require('lodash');
 
-const { initializeBot, sendModUpdates } = require('./discord');
+const { initializeBots, sendModUpdates } = require('./discord');
 
 dayjs.extend(timezone);
 dayjs.extend(customParseFormat);
@@ -30,7 +30,7 @@ axios.defaults.headers.common = {
 main();
 
 async function main() {
-    await initializeBot();
+    await initializeBots();
 
     log('Spiffo bot online.');
 
