@@ -14,7 +14,7 @@ dayjs.extend(customParseFormat);
 dayjs.tz.setDefault('Asia/Manila');
 
 const ROOT_PAGE_URL =
-    'https://steamcommunity.com/profiles/76561198077301146/myworkshopfiles/?appid=108600&browsefilter=myfavorites&sortmethod=lastupdated&browsesort=myfavorites';
+    'https://steamcommunity.com/sharedfiles/filedetails/?edit=true&id=2731058267';
 
 const MOD_PAGE_URL = 'https://steamcommunity.com/sharedfiles/filedetails';
 
@@ -30,6 +30,8 @@ axios.defaults.headers.common = {
 main();
 
 async function main() {
+    log('Initializing bots.');
+
     await initializeBots();
 
     log('Spiffo bot online.');
@@ -40,13 +42,17 @@ async function main() {
 
     async function poll() {
         try {
-            const updatedModsList = await scrapePage(1);
+            log('Scanning started.');
+
+            const updatedModsList = await scrapeMods();
+
+            log('Scanning done.');
 
             const newMods = await checkForModChanges(modsList, updatedModsList);
 
             if (newMods.length) {
                 if (modsList !== null) {
-                    log('Mod changes detected.');
+                    log('Mod activity detected.');
 
                     newMods.forEach((mod) => {
                         log(
@@ -59,7 +65,15 @@ async function main() {
                     sendModUpdates(newMods);
                 }
 
-                modsList = updatedModsList;
+                if (modsList !== null) {
+                    modsList = updatedModsList.map((updatedMod, i) =>
+                        updatedMod.title
+                            ? updatedMod
+                            : modsList.find((mod) => mod.id === updatedMod.id)
+                    );
+                } else {
+                    modsList = updatedModsList;
+                }
             }
         } catch (e) {
             console.error(e);
@@ -70,20 +84,26 @@ async function main() {
 }
 
 async function checkForModChanges(prevModsList = [], updatedModsList, i) {
-    const newMods = _.differenceWith(updatedModsList, prevModsList, (a, b) => {
+    if (!prevModsList) {
+        prevModsList = [];
+    }
+
+    let newMods = _.differenceWith(updatedModsList, prevModsList, (a, b) => {
         return a.id === b.id && dayjs(a.lastUpdated).isSame(b.lastUpdated);
     });
 
+    newMods = newMods.filter((newMod) => !!newMod.lastUpdated);
+
     return newMods;
 }
-async function scrapePage(pageNumber) {
+async function scrapeMods() {
     try {
-        const response = await axios.get(`${ROOT_PAGE_URL}&p=${pageNumber}`);
+        const response = await axios.get(ROOT_PAGE_URL);
 
         const modAppIds = getModAppIds(response.data);
 
         const promiseThrottle = new PromiseThrottle({
-            requestsPerSecond: 1,
+            requestsPerSecond: 5,
             promiseImplementation: Promise,
         });
 
@@ -91,7 +111,16 @@ async function scrapePage(pageNumber) {
             promiseThrottle.add(getModMetadata.bind(this, modAppId))
         );
 
-        const modMetadata = await Promise.all(promises);
+        const modMetadata = (await Promise.allSettled(promises)).map(
+            (promise) =>
+                promise.status === 'fulfilled'
+                    ? promise.value
+                    : {
+                          title: null,
+                          url: null,
+                          lastUpdated: null,
+                      }
+        );
 
         return modAppIds.map((modAppId, i) => ({
             id: modAppId,
@@ -100,9 +129,8 @@ async function scrapePage(pageNumber) {
             lastUpdated: modMetadata[i].lastUpdated,
         }));
     } catch (e) {
-        throw new Error(
-            `Something wrong happened trying to scrape page ${pageNumber}.`
-        );
+        console.error(e);
+        throw new Error(`Something wrong happened trying to scrape mods.`);
     }
 }
 
@@ -110,8 +138,8 @@ function getModAppIds(html) {
     const $ = cheerio.load(html);
 
     const modAppIds = Array.from(
-        $('a[data-publishedfileid]').map((i, el) =>
-            $(el).attr('data-publishedfileid')
+        $('.collectionItem').map((i, el) =>
+            $(el).attr('id').replace('sharedfile_', '')
         )
     );
 
@@ -146,12 +174,17 @@ async function getModMetadata(modAppId) {
             dateFormat = STANDARD_DATE_FORMAT_US;
         }
 
+        let lastUpdated = dayjs(`${dateText} ${timeText}`, dateFormat);
+
         return {
             title,
             url: modUrl,
-            lastUpdated: dayjs(`${dateText} ${timeText}`, dateFormat),
+            lastUpdated: lastUpdated.isValid()
+                ? lastUpdated
+                : dayjs('2000-1-1'),
         };
     } catch (e) {
+        console.error(e);
         throw new Error(
             `Something wrong happened trying to scrape mod ${modAppId}.`
         );

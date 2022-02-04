@@ -53,11 +53,13 @@ exports.initializeBots = function () {
 };
 
 exports.sendModUpdates = async function (modUpdates) {
-    const channel = await client.channels.fetch(DISCORD_CHANNEL_ID);
+    const channel = await spiffoClient.channels.fetch(DISCORD_CHANNEL_ID);
 
     let message = `**Mod activity detected.**\n\n${
         modUpdates.length === 1 ? 'This' : 'These'
-    } mod require${modUpdates.length === 1 ? 's' : ''} update:\n`;
+    } mod${modUpdates.length === 1 ? '' : 's'} require${
+        modUpdates.length === 1 ? 's' : ''
+    } update:\n`;
 
     modUpdates.forEach((modUpdate) => {
         message += `\n- ${modUpdate.title} (${modUpdate.url})`;
