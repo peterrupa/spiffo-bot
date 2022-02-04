@@ -5,8 +5,13 @@ const dayjs = require('dayjs');
 const timezone = require('dayjs/plugin/timezone');
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 const _ = require('lodash');
+const schedule = require('node-schedule');
 
-const { initializeBots, sendModUpdates } = require('./discord');
+const {
+    initializeBots,
+    sendModUpdates,
+    sendMessageToAll,
+} = require('./discord');
 
 dayjs.extend(timezone);
 dayjs.extend(customParseFormat);
@@ -33,6 +38,8 @@ async function main() {
     log('Initializing bots.');
 
     await initializeBots();
+
+    initializeReminders();
 
     log('Spiffo bot online.');
 
@@ -189,6 +196,45 @@ async function getModMetadata(modAppId) {
             `Something wrong happened trying to scrape mod ${modAppId}.`
         );
     }
+}
+
+function initializeReminders() {
+    const reminder10MinsRemainingText =
+        'Server restart in 10 mins. This is an automated message.';
+    const reminder5MinsRemainingText =
+        'Server restart in 5 mins. Seek shelter. This is an automated message.';
+    const reminder1MinRemainingText =
+        'Server restart in 1 min. Stay safe. survivors!';
+
+    function remind10MinsRemaining() {
+        log('Sending reminder - 10 mins remaining');
+
+        sendMessageToAll(reminder10MinsRemainingText);
+    }
+
+    function remind5MinsRemaining() {
+        log('Sending reminder - 5 mins remaining');
+
+        sendMessageToAll(reminder5MinsRemainingText);
+    }
+
+    function remind1MinRemaining() {
+        log('Sending reminder - 1 min remaining');
+
+        sendMessageToAll(reminder1MinRemainingText);
+    }
+
+    // 10 mins remaining
+    schedule.scheduleJob('0 50 6 * * *', remind10MinsRemaining);
+    schedule.scheduleJob('0 50 18 * * *', remind10MinsRemaining);
+
+    // 5 mins remaining
+    schedule.scheduleJob('0 55 6 * * *', remind5MinsRemaining);
+    schedule.scheduleJob('0 55 18 * * *', remind5MinsRemaining);
+
+    // 1 min remaining
+    schedule.scheduleJob('0 59 6 * * *', remind1MinRemaining);
+    schedule.scheduleJob('0 59 18 * * *', remind1MinRemaining);
 }
 
 function getCurrentYear() {

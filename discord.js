@@ -67,3 +67,9 @@ exports.sendModUpdates = async function (modUpdates) {
 
     channel.send(message);
 };
+
+exports.sendMessageToAll = async function (message) {
+    const channel = await spiffoClient.channels.fetch(DISCORD_CHANNEL_ALL_ID);
+
+    channel.send(message);
+};
