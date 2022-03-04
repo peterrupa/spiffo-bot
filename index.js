@@ -18,10 +18,10 @@ dayjs.extend(customParseFormat);
 
 dayjs.tz.setDefault('Asia/Manila');
 
-const ROOT_PAGE_URL =
-    'https://steamcommunity.com/sharedfiles/filedetails/?edit=true&id=2731058267';
-
 const MOD_PAGE_URL = 'https://steamcommunity.com/sharedfiles/filedetails';
+
+const MODS_LIST_EXPORT_URL =
+    'https://docs.google.com/spreadsheets/d/1yG0QNjiyvFO8JyCVk4tjTSlKWyo9fsXWsR6HPOGMEKI/gviz/tq?range=C3:C500&tqx=out:csv';
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 mins
 
@@ -105,9 +105,7 @@ async function checkForModChanges(prevModsList = [], updatedModsList, i) {
 }
 async function scrapeMods() {
     try {
-        const response = await axios.get(ROOT_PAGE_URL);
-
-        const modAppIds = getModAppIds(response.data);
+        const modAppIds = await getModAppIds();
 
         const promiseThrottle = new PromiseThrottle({
             requestsPerSecond: 5,
@@ -141,14 +139,12 @@ async function scrapeMods() {
     }
 }
 
-function getModAppIds(html) {
-    const $ = cheerio.load(html);
+async function getModAppIds() {
+    const response = await axios.get(MODS_LIST_EXPORT_URL);
 
-    const modAppIds = Array.from(
-        $('.collectionItem').map((i, el) =>
-            $(el).attr('id').replace('sharedfile_', '')
-        )
-    );
+    const data = response.data.split('\n');
+
+    const modAppIds = data.map((line) => line.replace(/"/g, ''));
 
     return modAppIds;
 }
