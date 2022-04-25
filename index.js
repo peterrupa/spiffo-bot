@@ -21,7 +21,7 @@ dayjs.tz.setDefault('Asia/Manila');
 const MOD_PAGE_URL = 'https://steamcommunity.com/sharedfiles/filedetails';
 
 const MODS_LIST_EXPORT_URL =
-    'https://docs.google.com/spreadsheets/d/1yG0QNjiyvFO8JyCVk4tjTSlKWyo9fsXWsR6HPOGMEKI/gviz/tq?range=C3:C500&tqx=out:csv';
+    'https://docs.google.com/spreadsheets/d/1yG0QNjiyvFO8JyCVk4tjTSlKWyo9fsXWsR6HPOGMEKI/gviz/tq?range=B3:B500&tqx=out:csv';
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 mins
 
